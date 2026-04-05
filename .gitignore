@@ -1,0 +1,13 @@
+# Logs
+logs/
+
+# macOS
+.DS_Store
+
+# Temp files
+push.sh
+/tmp/
+
+# Python cache
+__pycache__/
+*.pyc
