@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.readinglist.monitor</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/wangshuqi/helloworld/Reading_List/scripts/run-monitor.sh</string>
+    </array>
+
+    <!-- 每天早上 9:00 执行 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/wangshuqi/helloworld/Reading_List/logs/monitor.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/wangshuqi/helloworld/Reading_List/logs/monitor-error.log</string>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/wangshuqi/helloworld/Reading_List</string>
+
+    <!-- 如果错过了执行时间（比如电脑关机了），开机后立即补执行 -->
+    <key>StartInterval</key>
+    <integer>86400</integer>
+</dict>
+</plist>
