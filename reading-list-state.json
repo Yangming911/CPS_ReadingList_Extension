@@ -1,6 +1,14 @@
 {
-  "last_checked": "2026-04-05T18:02:00",
+  "last_checked": "2026-04-08T09:00:00",
   "known_papers": [
+    "Staggered Integral Online Conformal Prediction for Safe Dynamics Adaptation with Multi-Step Coverage Guarantees",
+    "From Points to Sets: Set-Based Safety Verification in the Latent Space",
+    "A Unifying Approach to Product Constructions for Quantitative Temporal Inference",
+    "Risk-Constrained Belief-Space Optimization for Safe Control under Latent Uncertainty",
+    "Minimal Information Control Invariance via Vector Quantization",
+    "Probably Approximately Correct (PAC) Guarantees for Data-Driven Reachability Analysis: A Theoretical and Empirical Comparison",
+    "Inverse Safety Filtering: Inferring Constraints from Safety Filters for Decentralized Coordination",
+    "Goal-Conditioned Neural ODEs with Guaranteed Safety and Stability for Learning-Based All-Pairs Motion Planning",
     "Distributed Privacy-Preserving Monitoring",
     "A Closed-Form CLF-CBF Controller for Whole-Body Continuum Soft Robot Collision Avoidance",
     "Can LLMs Perform Synthesis?",
@@ -97,6 +105,8 @@
     "Matrix Control Barrier Functions",
     "Risk-Aware Robotics: Tail Risk Measures in Planning, Control, and Verification",
     "Automatic Synthesis of Smooth Infinite Horizon Paths Satisfying Linear Temporal Logic Specifications",
-    "TeLoGraF: Temporal Logic Planning via Graph-encoded Flow Matching"
+    "TeLoGraF: Temporal Logic Planning via Graph-encoded Flow Matching",
+    "Sampling-Based Robust Control of Autonomous Systems with Non-Gaussian Noise",
+    "Automata-Theoretic Approach to Planning for Temporally Extended Goals"
   ]
 }
