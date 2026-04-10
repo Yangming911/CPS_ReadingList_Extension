@@ -11,3 +11,9 @@ push.sh
 # Python cache
 __pycache__/
 *.pyc
+
+# Local config with sensitive URLs (Overleaf links etc.)
+config.local.json
+
+# Skill binary files
+*.skill

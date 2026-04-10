@@ -4,7 +4,7 @@
 
 ## 配置信息
 
-- **Overleaf 项目**：`REDACTED_OVERLEAF_URL`
+- **Overleaf 项目**：从 `config.local.json` 的 `overleaf_project_url` 字段读取
 - **本地 Git 仓库**：`/Users/wangshuqi/helloworld/Reading_List`
 - **GitHub 远程仓库**：`https://github.com/Yangming911/CPS_ReadingList_Extension`
 - **状态文件**：`/Users/wangshuqi/helloworld/Reading_List/reading-list-state.json`
@@ -17,9 +17,12 @@
 使用 Overleaf 的 git 接口拉取最新的 LaTeX 源码：
 
 ```bash
+# 从 config.local.json 读取 Overleaf git URL
+OVERLEAF_GIT_URL=$(python3 -c "import json; print(json.load(open('config.local.json'))['overleaf_git_url'])")
+
 # 如果 overleaf-source 目录不存在，先 clone
 if [ ! -d /tmp/overleaf-reading-list ]; then
-    git clone REDACTED_OVERLEAF_GIT_URL /tmp/overleaf-reading-list
+    git clone "$OVERLEAF_GIT_URL" /tmp/overleaf-reading-list
 else
     cd /tmp/overleaf-reading-list && git pull
 fi

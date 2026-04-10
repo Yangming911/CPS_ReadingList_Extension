@@ -15,7 +15,7 @@ This skill monitors a LaTeX-formatted reading list hosted on SJTU Overleaf, dete
 
 ## Overview
 
-The reading list lives at: `REDACTED_OVERLEAF_URL`
+The reading list lives on SJTU Overleaf. The URL is stored locally in `config.local.json` (field: `overleaf_project_url`). Read this file at runtime to get the actual URL.
 
 It is a LaTeX document using `\begin{enumerate}` with `\item` entries. New papers are always added at the **top** of the list (earliest `\item` entries = newest papers). The skill needs to:
 
@@ -41,9 +41,9 @@ Before first use, ensure the following are set up:
 
 ### Chrome Login
 The user must be logged into SJTU Overleaf in Chrome:
-1. `REDACTED_OVERLEAF_HOST` — for accessing the Overleaf reading list project
+1. The Overleaf host (see `config.local.json`) — for accessing the reading list project
 
-**⚠️ Overleaf 只读原则：访问 REDACTED_OVERLEAF_HOST 时仅允许读取页面文本，严禁任何点击、输入、编辑、删除操作。这是导师的文档，任何误操作都可能造成不可挽回的后果。**
+**⚠️ Overleaf 只读原则：访问 Overleaf 页面时仅允许读取页面文本，严禁任何点击、输入、编辑、删除操作。这是导师的文档，任何误操作都可能造成不可挽回的后果。**
 
 ### Git Repository
 The local repo at `/Users/wangshuqi/helloworld/Reading_List` must be:
@@ -58,11 +58,11 @@ The skill maintains a state file at `/Users/wangshuqi/helloworld/Reading_List/re
 
 ### Step 1: Extract the Current Paper List from Overleaf
 
-**⚠️ CRITICAL: READ-ONLY ACCESS — The Overleaf page (REDACTED_OVERLEAF_HOST) must be treated as strictly read-only. Under NO circumstances should this skill click, type, edit, delete, or modify anything on the Overleaf page. The ONLY permitted actions are: navigating to the page, waiting for it to load, and extracting text via `get_page_text`. Do NOT click into the editor, do NOT use `form_input`, do NOT use `javascript_tool` to modify DOM content, and do NOT interact with any buttons or menus on the page.**
+**⚠️ CRITICAL: READ-ONLY ACCESS — The Overleaf page must be treated as strictly read-only. Under NO circumstances should this skill click, type, edit, delete, or modify anything on the Overleaf page. The ONLY permitted actions are: navigating to the page, waiting for it to load, and extracting text via `get_page_text`. Do NOT click into the editor, do NOT use `form_input`, do NOT use `javascript_tool` to modify DOM content, and do NOT interact with any buttons or menus on the page.**
 
 Use Chrome browser automation to access the Overleaf project:
 
-1. Navigate to `REDACTED_OVERLEAF_URL`
+1. Read the Overleaf URL from `config.local.json` (field: `overleaf_project_url`), then navigate to it
 2. Wait for the editor to load (look for the source code editor content)
 3. Extract the page text using `get_page_text` (READ-ONLY — do not interact with the page in any other way)
 4. Parse the LaTeX source to extract paper titles from `\item` entries
