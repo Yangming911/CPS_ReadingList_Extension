@@ -1,6 +1,7 @@
 {
-  "last_checked": "2026-04-08T09:00:00",
+  "last_checked": "2026-04-21T16:30:00",
   "known_papers": [
+    "Trajectory Planning for Safe Dual Control with Active Exploration",
     "Staggered Integral Online Conformal Prediction for Safe Dynamics Adaptation with Multi-Step Coverage Guarantees",
     "From Points to Sets: Set-Based Safety Verification in the Latent Space",
     "A Unifying Approach to Product Constructions for Quantitative Temporal Inference",
@@ -74,6 +75,7 @@
     "Manifold-constrained Hamilton-Jacobi Reachability Learning for Decentralized Multi-Agent Motion Planning",
     "HMARL-CBF: Hierarchical Multi-Agent Reinforcement Learning with Control Barrier Functions for Safe Multi-Robot Navigation",
     "A Hamilton-Jacobi Reachability Framework with Soft Constraints for Safety-Aware Trajectory Planning",
+    "LAD-VF: LLM-Automatic Differentiation Enables Fine-Tuning-Free Robot Planning from Formal Methods Feedback",
     "Physics-Informed Multi-Agent Reinforcement Learning for Distributed Multi-Robot Problems",
     "Conformal Temporal Logic Planning using Large Language Models: Knowing When to Do What and When to Ask for Help",
     "Closed-Loop Analysis of Vision-Based Autonomous Systems: A Case Study",
