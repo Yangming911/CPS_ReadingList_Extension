@@ -1,6 +1,7 @@
 {
-  "last_checked": "2026-04-21T16:30:00",
+  "last_checked": "2026-04-23T10:00:00",
   "known_papers": [
+    "Local Linearity of LLMs Enables Activation Steering via Model-Based Linear Optimal Control",
     "Trajectory Planning for Safe Dual Control with Active Exploration",
     "Staggered Integral Online Conformal Prediction for Safe Dynamics Adaptation with Multi-Step Coverage Guarantees",
     "From Points to Sets: Set-Based Safety Verification in the Latent Space",
