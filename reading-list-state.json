@@ -1,6 +1,8 @@
 {
-  "last_checked": "2026-04-24T10:45:00",
+  "last_checked": "2026-04-28T10:00:00",
   "known_papers": [
+    "Navigating the Clutter: Waypoint-Based Bi-Level Planning for Multi-Robot Systems",
+    "Full-Body Dynamic Safety for Robot Manipulators: 3D Poisson Safety Functions for CBF-Based Safety Filters",
     "Controlling diverse robots by inferring Jacobian fields with deep networks",
     "Local Linearity of LLMs Enables Activation Steering via Model-Based Linear Optimal Control",
     "Trajectory Planning for Safe Dual Control with Active Exploration",
