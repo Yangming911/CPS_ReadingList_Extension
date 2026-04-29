@@ -1,6 +1,7 @@
 {
-  "last_checked": "2026-04-28T10:00:00",
+  "last_checked": "2026-04-29T10:00:00",
   "known_papers": [
+    "VISION-SLS: Safe Perception-Based Control from Learned Visual Representations via System Level Synthesis",
     "Navigating the Clutter: Waypoint-Based Bi-Level Planning for Multi-Robot Systems",
     "Full-Body Dynamic Safety for Robot Manipulators: 3D Poisson Safety Functions for CBF-Based Safety Filters",
     "Controlling diverse robots by inferring Jacobian fields with deep networks",
