@@ -1,6 +1,12 @@
 {
-  "last_checked": "2026-04-29T10:00:00",
+  "last_checked": "2026-05-07T20:15:00",
   "known_papers": [
+    "Beyond alignment: Why robotic foundation models need context-aware safety",
+    "Multistability of Self-Attention Dynamics in Transformers",
+    "On Surprising Effects of Risk-Aware Domain Randomization for Contact-Rich Sampling-based Predictive Control",
+    "Refining Compositional Diffusion for Reliable Long-Horizon Planning",
+    "Value Functions for Temporal Logic: Optimal Policies and Safety Filters",
+    "Affordance Agent Harness: Verification-Gated Skill Orchestration",
     "VISION-SLS: Safe Perception-Based Control from Learned Visual Representations via System Level Synthesis",
     "Navigating the Clutter: Waypoint-Based Bi-Level Planning for Multi-Robot Systems",
     "Full-Body Dynamic Safety for Robot Manipulators: 3D Poisson Safety Functions for CBF-Based Safety Filters",
