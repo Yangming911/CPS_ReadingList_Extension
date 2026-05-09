@@ -1,6 +1,9 @@
 {
-  "last_checked": "2026-05-07T20:15:00",
+  "last_checked": "2026-05-09T09:00:00",
   "known_papers": [
+    "Safety Certification is Classification",
+    "HDFlow: Hierarchical Diffusion-Flow Planning for Long-horizon Tasks",
+    "Dream-MPC: Gradient-Based Model Predictive Control with Latent Imagination",
     "Beyond alignment: Why robotic foundation models need context-aware safety",
     "Multistability of Self-Attention Dynamics in Transformers",
     "On Surprising Effects of Risk-Aware Domain Randomization for Contact-Rich Sampling-based Predictive Control",
