@@ -1,103 +1,104 @@
 # Cross-Attention and Encoder–Decoder Transformers: A Logical Characterization — 调研报告
 
 > 生成日期：2026-05-12 | Reading List Monitor
-> 论文来源：尚未在 arXiv 或主要数据库中检索到公开版本，报告基于论文标题及密切相关领域文献撰写
+> 论文来源：https://arxiv.org/abs/2605.07705
 
 ## 1. 问题背景与研究动机
 
-Transformer 架构的表达能力（expressiveness）是理论计算机科学与深度学习交叉领域的核心问题之一。近年来，研究者通过形式语言理论和数理逻辑的工具，系统地刻画了不同 Transformer 变体能够识别的语言类别。然而，现有工作主要集中在以下两类架构上：
+Transformer 架构的表达能力（expressiveness）是理论计算机科学与深度学习交叉领域的核心问题之一。近年来，研究者通过形式语言理论和数理逻辑的工具，系统地刻画了不同 Transformer 变体能够识别的语言类别。然而，此前的绝大多数工作仅关注 encoder-only（使用 unmasked self-attention）或 decoder-only（使用 causal masked self-attention）两类架构，而原始 Transformer 论文（Vaswani et al., 2017）提出的 encoder-decoder 架构——其核心的 cross-attention 机制使 decoder 能够关注 encoder 的输出——一直缺乏精确的逻辑刻画。
 
-- **Encoder-only Transformers**：Barceló, Kozachinskiy 等人（ICLR 2024）证明了使用 unique hard attention (UHAT) 的 encoder 恰好能识别一阶逻辑（first-order logic）配合任意一元数值谓词所定义的语言类，落在电路复杂性类 AC⁰ 之内；而使用 average hard attention (AHAT) 的 encoder 则可以识别 AC⁰ 之外但仍在 TC⁰ 之内的语言。
-- **Decoder-only Transformers**：Pérez 等人（2021）早期就证明了带有中间步骤的 decoder 是图灵完备的。
-
-一个显著的理论空白在于：**encoder-decoder 架构中的 cross-attention 机制的逻辑刻画尚不明确。** Cross-attention 是 encoder-decoder Transformer 的核心组件，它允许 decoder 的 query 向量去关注 encoder 的 key-value 输出，从而实现两个序列之间的信息交互。这种机制在机器翻译、摘要生成、多模态推理等任务中至关重要，但其对模型形式表达能力的具体影响——特别是能否用某种逻辑形式精确刻画——一直缺乏严格的理论分析。
-
-本文（根据标题推断）旨在填补这一空白，为包含 cross-attention 的 encoder-decoder Transformer 提供逻辑层面的精确刻画（logical characterization），从而将现有的"encoder-only 逻辑刻画"研究自然地推广到更完整的 Transformer 架构上。
+这一空白具有实际意义：encoder-decoder 架构至今仍被广泛应用于机器翻译（如 NLLB）、图像/视频生成（如 Latent Diffusion Models、Open-Sora）等需要 cross-attention 的场景。本文由 Tampere University 的 Ahvonen、Heiman、Kuusisto、Moreno 和 Selin 五位作者完成，据作者所知，这是首个对 cross-attention 和 encoder-decoder Transformer 给出逻辑刻画的工作。
 
 ## 2. 技术方法
 
-虽然论文全文尚未公开检索到，但基于标题和相关领域的研究范式，可以合理推测其技术路线：
+本文在 **floating-point 数值精度**和 **soft-attention** 的实际设定下研究 encoder-decoder Transformer 的表达能力，提出了一个三方等价的刻画框架。
 
-**形式化建模方面**，该工作很可能延续 Barceló 等人（2024）和 Strobl 等人（2024 survey）所建立的框架：将 Transformer 的计算过程映射到逻辑公式的求值过程。具体而言：
+**核心逻辑工具：GPTL⁻ 逻辑。** 作者引入了一种新的时序逻辑 GPTL⁻（一种 global-past temporal logic 的变体），它在命题逻辑的基础上增加了两类模态算子：
 
-- **Self-attention** 此前已被刻画为一种受限的量词结构（quantifier structure），其中 attention score 的计算对应于在位置集合上的某种聚合操作。
-- **Cross-attention** 的独特之处在于它涉及**两个不同序列**之间的交互：decoder 位置 $i$ 的 query 需要在 encoder 输出的所有位置上计算 attention。这在逻辑层面可能对应于一种**二排序（two-sorted）逻辑**或**关系型量词**，其中量化域分别对应 encoder 和 decoder 的位置集合。
+- **Counting global modality**（⟨G⟩≥k）：作用于 encoder 输入，允许对 encoder 序列中满足某个性质的位置进行计数，对应 cross-attention 的信息汇聚能力。
+- **Past modality**（⟨P⟩）：作用于 decoder 输入，允许回溯 decoder 中已生成的历史位置，对应 decoder 的 causal masked self-attention。
 
-**可能的核心结果**包括：
-1. 确定 cross-attention 在逻辑层面引入了哪些额外的表达能力——是否超越了 encoder-only 的一阶逻辑 + 数值谓词刻画？
-2. 提供 encoder-decoder 架构能识别的语言类的精确逻辑刻画（上界和下界）。
-3. 分析 cross-attention 层数、head 数量等超参数对表达能力的影响。
+**核心自动机模型：CPG-automata。** 作者同时定义了 counting past-global distributed automata（CPG-automata），一种分布式自动机模型，用于作为 Transformer 和逻辑之间的桥梁。
 
-**关键技术挑战**在于 cross-attention 打破了单序列上的自引用结构，引入了**序列间的依赖关系**。这使得分析从单一排序的逻辑推广到多排序逻辑，或需要引入新的谓词/量词来捕获这种跨序列的注意力模式。
+**主要定理（Theorem 6）：** 以下三者具有相同的表达能力：
+1. 去掉最终 softmax 层的 floating-point encoder-decoder Transformer
+2. GPTL⁻ 逻辑
+3. CPG-automata
+
+证明通过三个方向的翻译完成：
+
+- **Logic ⇒ Transformers（Theorem 3）**：将 GPTL⁻ 公式的每个子公式的真值逐一计算——布尔运算由 MLP 层实现，counting global modality ⟨G⟩≥k 通过 cross-attention 层利用 underflow 技巧（来自 Ahvonen et al. 2026 关于 graph transformer 的工作）实现计数，past modality ⟨P⟩ 则通过 decoder 的 masked self-attention 实现。
+- **Transformers ⇒ Automata（Theorem 4）**：将 Transformer 的每个子层（self-attention、cross-attention、MLP）编码为 CPG-automata 的一步转移。关键在于 cross-attention 子层可以被 CPG-automata 的 global 组件模拟，而 softmax 归一化的有限精度特性（Proposition 1）保证了这一编码的可行性。
+- **Automata ⇒ Logic（Theorem 5）**：利用 type 公式（编码一个点的完整局部信息的公式）将 CPG-automata 的状态转移翻译为 GPTL⁻ 公式。
+
+**Autoregressive 设定（Theorem 7）**：作者进一步讨论了 autoregressive generation 场景——即 Transformer 循环地生成 token 直到输出 EOS。在这一设定中，需要保留最终的 softmax 层，且等价关系需要相对于一个 similarity relation ∼ 来定义（因为 softmax 输出中的微小浮点差异可能导致不同的 argmax 选择）。Theorem 7 表明：对于任意 similarity relation ∼，encoder-decoder Transformer（含 softmax）、GPTL⁻ 和 CPG-automata 三者在 ∼ 下仍具有相同的表达能力。
+
+**架构鲁棒性**：论文在 Appendix B 中证明，其刻画结果对若干架构变体保持成立，包括 multi-head cross-attention（vs. single-head）、不同的 masking 策略、以及 layer normalization 的有无。
 
 ## 3. 研究前沿与意义
 
-**Transformer 的形式表达能力刻画**是一个近年来快速发展的热门方向，有以下证据：
+**Transformer 形式表达能力刻画**是一个近年来快速发展的热门方向：
 
-- Strobl, Merrill 等人在 TACL 2024 发表了综合性综述 "What Formal Languages Can Transformers Express?"，系统梳理了该方向的进展。
-- ICLR 2024 接收了 Barceló 等人关于 hard attention encoder 的逻辑刻画工作。
-- ESSLLI 2024 专门开设了 "Expressivity of Transformers" 课程。
-- 多个理论 ML 和形式语言的 workshop（如 ICML 的 Theory of Transformers workshop）持续关注这一主题。
+- Strobl, Merrill 等人在 TACL 2024 发表的综述 "What Formal Languages Can Transformers Express?" 全面梳理了该方向的进展，但明确指出 encoder-decoder 的理论分析相对匮乏——本文正是填补这一空白。
+- 同一作者团队（Ahvonen, Heiman, Kuusisto 等）此前已在 graph transformer 领域建立了 PL+GC 逻辑刻画（AAAI 2026），本文的 GPTL⁻ 逻辑正是 PL+GC 向序列 encoder-decoder 架构的自然推广。
+- Barceló 等人（ICLR 2024）对 hard attention encoder 给出了基于一阶逻辑 + 数值谓词的刻画；Li & Cotterell 对 fixed-precision decoder-only Transformer 给出了 LTL[◇⁻] 刻画。本文补齐了 encoder-decoder 这一缺失的拼图。
 
-**主要竞争方法/视角**包括：
-- **电路复杂性方法**：将 Transformer 映射到 AC⁰/TC⁰ 电路族，分析其计算复杂度上界。
-- **自动机理论方法**：通过有限状态自动机、计数器机、图灵机等模型分析 Transformer 的计算能力。
-- **逻辑方法**（本文所属）：通过一阶逻辑及其扩展来精确刻画 Transformer 的表达能力。逻辑方法的优势在于可以更细粒度地增删量词和谓词来匹配不同的架构变体。
+**活跃研究组**：Tampere University（Ahvonen, Kuusisto 等）、Pablo Barceló 团队（PUC Chile）、David Chiang 团队（Notre Dame）、William Merrill（NYU）、Lena Strobl（Oxford/McGill）等。
 
-**活跃研究组**：Pablo Barceló（PUC Chile / IMFD）、William Merrill（NYU）、Lena Strobl（University of Oxford / McGill）、Alexander Kozachinskiy 等。
-
-**常见发表 venue**：ICLR, NeurIPS, ICML, TACL (Transactions of the ACL), ACL, AAAI, FoSSaCS, LICS 等。
+**常见发表 venue**：ICLR, NeurIPS, ICML, AAAI, TACL, ACL, LICS 等。
 
 ## 4. 相关工作
 
-### 4.1 Logical Languages Accepted by Transformer Encoders with Hard Attention
-- **作者**：Pablo Barceló, Alexander Kozachinskiy, Anthony W. Lin, Vladimir Podolskii
+### 4.1 Expressive Power of Graph Transformers via Logic
+- **作者**：Ahvonen, Funk, Heiman, Kuusisto, Lutz
+- **会议**：AAAI 2026（同时有 arXiv 扩展版 2508.01067）
+- **与本文的关联**：这是本文最直接的前序工作，由同一核心团队完成。该文为 floating-point graph transformer 建立了 PL+GC 逻辑刻画。本文的关键技术工具（如利用 underflow 进行计数的 Proposition 2、softmax 有限精度的 Proposition 1）均来自该文。GPTL⁻ 可以理解为 PL+GC 从图结构到序列 encoder-decoder 结构的特化与扩展。
+- **关键区别**：前者处理的是图上的单一 Transformer（无 encoder-decoder 分离），而本文需要处理 cross-attention 连接两个不同序列的情况，引入了 past modality 和 global modality 的分离。
+
+### 4.2 Logical Languages Accepted by Transformer Encoders with Hard Attention
+- **作者**：Barceló, Kozachinskiy, Lin, Podolskii
 - **会议**：ICLR 2024
-- **与本文的关联**：这是最直接的前序工作。该文对 encoder-only Transformer 在 hard attention 下的语言识别能力给出了逻辑刻画，证明 UHAT encoder 识别的语言恰好对应一阶逻辑 + 一元数值谓词。本文（推测）将这一分析框架扩展到包含 cross-attention 的 encoder-decoder 架构。
-- **关键区别**：前者只涉及单一序列上的 self-attention，而本文需要处理 cross-attention 引入的双序列交互。
+- **与本文的关联**：该文对 hard attention encoder 建立了基于一阶逻辑 + 一元数值谓词的刻画（UHAT 对应 FO[<, MOD]，AHAT 在此基础上增加 counting terms）。本文选择了不同的技术路线：研究 soft attention + floating-point 设定，并使用时序逻辑而非一阶逻辑作为刻画工具。
+- **关键区别**：attention 机制不同（hard vs. soft）、数值模型不同（exact vs. floating-point）、逻辑框架不同（一阶逻辑 vs. 时序逻辑）、架构不同（encoder-only vs. encoder-decoder）。
 
-### 4.2 What Formal Languages Can Transformers Express? A Survey
-- **作者**：Lena Strobl, William Merrill, Gail Weiss, David Chiang, Dana Angluin
-- **期刊**：TACL 2024
-- **与本文的关联**：该综述系统梳理了 Transformer 表达能力的理论研究，涵盖了 encoder-only、decoder-only、encoder-decoder 三种架构，但指出 encoder-decoder 的理论分析相对较少——这正是本文的切入点。
-- **关键区别**：综述性质 vs. 本文提供新的理论结果。
+### 4.3 Logical Characterizations of Recurrent Graph Neural Networks with Reals and Floats
+- **作者**：Ahvonen, Heiman, Kuusisto, Lutz
+- **会议**：NeurIPS 2024
+- **与本文的关联**：同一团队的另一项工作，为 recurrent GNN 建立了逻辑刻画。展示了 floating-point 设定下逻辑刻画的一般方法论，其中的 type 公式技术被本文的 Automata ⇒ Logic 方向证明所使用。
+- **关键区别**：处理的是循环图神经网络而非 Transformer。
 
-### 4.3 On the Turing Completeness of Modern Neural Network Architectures
-- **作者**：Jorge Pérez, Javier Marinković, Pablo Barceló
-- **会议**：ICLR 2019
-- **与本文的关联**：该工作证明了具有中间计算步骤的 encoder-decoder Transformer 是图灵完备的。本文（推测）在更受限的设定下（如固定层数、特定 attention 类型）给出更精细的刻画。
-- **关键区别**：图灵完备性是一个较粗糙的上界；逻辑刻画提供了更精确的表达能力边界。
+### 4.4 Characterizing the Expressivity of Fixed-precision Transformer Language Models (Li & Cotterell)
+- **与本文的关联**：该文对 fixed-precision decoder-only Transformer 给出了 LTL[◇⁻] 时序逻辑刻画。本文的 GPTL⁻ 逻辑可以看作在 LTL[◇⁻] 的 past modality 基础上，增加了 counting global modality 来捕获 cross-attention 的额外表达能力。
+- **关键区别**：前者仅限 decoder-only（无 cross-attention），本文完整刻画了 encoder-decoder 架构。
 
-### 4.4 Masked Hard-Attention Transformers Recognize Exactly the Star-Free Languages
-- **作者**：Andy Yang, David Chiang, Dana Angluin
-- **与本文的关联**：该文证明带有严格未来掩码的 hard attention encoder 恰好识别 star-free 正则语言（等价于一阶逻辑可定义的语言），为 attention mask 对表达能力的影响提供了精确刻画。Cross-attention 可以看作另一种形式的"掩码"——decoder 只能 attend 到 encoder 的输出而非自身的历史。
-- **关键区别**：该文处理的是 causal masking 的效果，而非 cross-attention 的跨序列交互。
-
-### 4.5 The Computational Complexity of Formal Reasoning for Encoder-Only Transformers
-- **作者**：发表于 2024 年
-- **与本文的关联**：该文从计算复杂度角度分析 encoder-only Transformer 的推理能力，为理解 Transformer 的形式推理能力提供了补充视角。
-- **关键区别**：关注的是推理的计算复杂度而非语言识别的逻辑刻画；且仅限于 encoder-only。
+### 4.5 Tighter Bounds on the Expressivity of Transformer Encoders
+- **作者**：Chiang, Cholak, Pillay
+- **会议**：ICML 2023
+- **与本文的关联**：该文在电路复杂性框架下给出了 encoder 表达能力的更紧界（FOC[+;MOD]）。代表了与逻辑刻画互补的另一条技术路线——电路复杂性方法。
+- **关键区别**：方法论不同（电路复杂性 vs. 时序逻辑直接刻画）；架构不同（encoder-only vs. encoder-decoder）。
 
 ## 5. 组会讨论要点
 
-1. **Cross-attention 的逻辑本质**：Cross-attention 在逻辑层面是否可以被理解为一种"跨排序量词"？如果 encoder 和 decoder 的位置集合分别构成两个排序（sort），那么 cross-attention 引入的逻辑结构是否可以用已知的二排序一阶逻辑（two-sorted first-order logic）来刻画？这对理解多模态 Transformer（如 vision-language model）的能力有何启示？
+1. **GPTL⁻ 的两个模态算子精确对应了架构中的两种 attention 机制**：counting global modality 对应 cross-attention（decoder 对 encoder 的全局查询与计数），past modality 对应 decoder 的 causal self-attention（回顾已生成的历史）。这种"逻辑算子 ↔ 架构组件"的一一对应关系非常优雅，值得讨论：如果我们修改架构（例如增加 encoder 的 self-attention 对应的模态算子），逻辑刻画会如何变化？这是否能指导新架构的设计？
 
-2. **与 CPS 安全验证的潜在联系**：Transformer 表达能力的逻辑刻画与我们组关注的形式化验证方向有深层联系。如果能精确知道 Transformer 能表达哪些逻辑性质，就能更好地判断基于 Transformer 的控制器或感知模块是否具备表达安全规约（如 barrier certificate、temporal logic specification）的能力。这对 learning-enabled CPS 的可验证性分析有直接意义。
+2. **与 CPS 形式化验证的联系**：本文的刻画结果表明 encoder-decoder Transformer（在 fixed-depth、floating-point 设定下）的表达能力被 GPTL⁻ 精确界定——这是一个可判定的逻辑。这意味着对于使用 encoder-decoder 架构的 learning-enabled 组件，至少在原则上可以对其输入-输出行为进行形式化推理。对于我们组关注的 perception-based safety（如 VISION-SLS、GUARDIAN 等工作），如果感知模块使用 encoder-decoder 架构，那么了解其表达能力边界对于设计 sound 的 safety filter 至关重要。
 
-3. **实践影响**：逻辑刻画结果是否能指导架构选择？例如，如果 cross-attention 在逻辑层面引入了特定类型的量词，那么对于需要跨序列推理的任务（如规划中 state-action 序列的交互推理），encoder-decoder 架构是否比 decoder-only 架构有理论优势？这对当前"decoder-only 一统天下"的趋势有何评论？
+3. **Autoregressive 设定中的 similarity relation**：Theorem 7 中引入的 ∼ 关系是一个有趣的理论工具。在实际系统中，softmax 输出的微小差异可能导致完全不同的 token 选择（argmax 的不稳定性），这与 CPS 中对 numerical robustness 的关注一脉相承。论文的局限性部分也提到了未考虑 positional encoding（如 RoPE）的影响——这可能影响实际系统中刻画的适用性，值得进一步探讨。
 
 ## 参考文献
 
-1. Barceló, P., Kozachinskiy, A., Lin, A. W., & Podolskii, V. (2024). Logical Languages Accepted by Transformer Encoders with Hard Attention. *ICLR 2024*. https://arxiv.org/abs/2310.03817
+1. Ahvonen, V., Funk, M., Heiman, D., Kuusisto, A., & Lutz, C. (2026). Expressive Power of Graph Transformers via Logic. *AAAI 2026*, pp. 19569–19579. https://arxiv.org/abs/2508.01067
 
-2. Strobl, L., Merrill, W., Weiss, G., Chiang, D., & Angluin, D. (2024). What Formal Languages Can Transformers Express? A Survey. *Transactions of the Association for Computational Linguistics*, 12, 543–561. https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00663
+2. Ahvonen, V., Heiman, D., Kuusisto, A., & Lutz, C. (2024). Logical Characterizations of Recurrent Graph Neural Networks with Reals and Floats. *NeurIPS 2024*, pp. 104205–104249.
 
-3. Pérez, J., Marinković, J., & Barceló, P. (2021). Attention is Turing-Complete. *Journal of Machine Learning Research*, 22(75), 1–35.
+3. Barceló, P., Kozachinskiy, A., Lin, A. W., & Podolskii, V. (2024). Logical Languages Accepted by Transformer Encoders with Hard Attention. *ICLR 2024*, pp. 22077–22087.
 
-4. Yang, A., Chiang, D., & Angluin, D. (2024). Masked Hard-Attention Transformers Recognize Exactly the Star-Free Languages. https://arxiv.org/abs/2310.13897
+4. Chiang, D., Cholak, P., & Pillay, A. (2023). Tighter Bounds on the Expressivity of Transformer Encoders. *ICML 2023*.
 
-5. Merrill, W., & Sabharwal, A. (2024). The Computational Complexity of Formal Reasoning for Encoder-Only Transformers. https://arxiv.org/abs/2405.18548
+5. Strobl, L., Merrill, W., Weiss, G., Chiang, D., & Angluin, D. (2024). What Formal Languages Can Transformers Express? A Survey. *TACL*, 12, 543–561. https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00663
 
----
+6. Vaswani, A. et al. (2017). Attention Is All You Need. *NeurIPS 2017*.
 
-*注：本报告撰写时，该论文的全文尚未在 arXiv 或主要学术数据库中检索到。报告内容基于论文标题推断的研究方向，结合密切相关领域的已有文献撰写。建议在论文全文公开后补充阅读以修正和深化理解。*
+7. Li, A. & Cotterell, R. Characterizing the Expressivity of Fixed-precision Transformer Language Models.
+
+8. Yang, A., Chiang, D., & Angluin, D. (2024). Masked Hard-Attention Transformers Recognize Exactly the Star-Free Languages. https://arxiv.org/abs/2310.13897
