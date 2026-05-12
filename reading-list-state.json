@@ -1,6 +1,7 @@
 {
-  "last_checked": "2026-05-09T09:00:00",
+  "last_checked": "2026-05-12T09:00:00",
   "known_papers": [
+    "Cross-Attention and Encoder–Decoder Transformers: A Logical Characterization",
     "Safety Certification is Classification",
     "HDFlow: Hierarchical Diffusion-Flow Planning for Long-horizon Tasks",
     "Dream-MPC: Gradient-Based Model Predictive Control with Latent Imagination",
