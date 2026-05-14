@@ -1,6 +1,9 @@
 {
-  "last_checked": "2026-05-12T09:00:00",
+  "last_checked": "2026-05-14T09:00:00",
   "known_papers": [
+    "Distributionally Robust Safety Under Arbitrary Uncertainties: A Safety Filtering Approach",
+    "Local Conformal Calibration of Dynamics Uncertainty from Semantic Images",
+    "On-the-fly LTLf Synthesis under Partial Observability",
     "Cross-Attention and Encoder–Decoder Transformers: A Logical Characterization",
     "Safety Certification is Classification",
     "HDFlow: Hierarchical Diffusion-Flow Planning for Long-horizon Tasks",
