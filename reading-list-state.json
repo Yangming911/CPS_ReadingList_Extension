@@ -1,6 +1,11 @@
 {
-  "last_checked": "2026-05-14T09:00:00",
+  "last_checked": "2026-05-19T09:00:00",
   "known_papers": [
+    "Runtime Monitoring of Perception-Based Autonomous Systems via Embedding Temporal Logic",
+    "Synthesizing POMDP Policies: Sampling Meets Model-checking via Learning",
+    "HJ-Gauss: A Monte-Carlo HJ Reachability Scheme",
+    "Policy Library CBF: Finite-Horizon Safety at Runtime via Parallel Rollouts",
+    "Formal Methods Meet LLMs: Auditing, Monitoring, and Intervention for Compliance of Advanced AI Systems",
     "Distributionally Robust Safety Under Arbitrary Uncertainties: A Safety Filtering Approach",
     "Local Conformal Calibration of Dynamics Uncertainty from Semantic Images",
     "On-the-fly LTLf Synthesis under Partial Observability",
