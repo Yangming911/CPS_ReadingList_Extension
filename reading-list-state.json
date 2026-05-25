@@ -1,6 +1,8 @@
 {
-  "last_checked": "2026-05-19T09:00:00",
+  "last_checked": "2026-05-25T09:00:00",
   "known_papers": [
+    "Inductive Deductive Synthesis: Enabling AI to Generate Formally Verified Systems",
+    "Switching Successor Measures for Hierarchical Zero-shot Reinforcement Learning",
     "Runtime Monitoring of Perception-Based Autonomous Systems via Embedding Temporal Logic",
     "Synthesizing POMDP Policies: Sampling Meets Model-checking via Learning",
     "HJ-Gauss: A Monte-Carlo HJ Reachability Scheme",
