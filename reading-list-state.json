@@ -1,6 +1,10 @@
 {
-  "last_checked": "2026-05-25T09:00:00",
+  "last_checked": "2026-06-05T09:00:00",
   "known_papers": [
+    "Value Functions as Supermartingale Certificates",
+    "Formal Specification Embeddings for Neuro-Symbolic Autonomy",
+    "Reinforcement Learning for Reachability: Guaranteeing Asymptotic Optimality",
+    "Parallel Differentiable Reachability for Learning and Planning with Certified Neural Dynamics and Controllers",
     "Inductive Deductive Synthesis: Enabling AI to Generate Formally Verified Systems",
     "Switching Successor Measures for Hierarchical Zero-shot Reinforcement Learning",
     "Runtime Monitoring of Perception-Based Autonomous Systems via Embedding Temporal Logic",
