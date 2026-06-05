@@ -1,74 +1,67 @@
 # Reinforcement Learning for Reachability: Guaranteeing Asymptotic Optimality — 调研报告
 
-> 生成日期：2026-06-01 | Reading List Monitor
-> 论文来源：未能在公开网络检索到该确切标题（可能为尚未被索引的最新预印本或在投稿件）。本报告基于标题语义与该子领域的近期文献撰写，相关方法定位与对比均有出处可循；待原文可获取后建议复核技术细节。
+> 生成日期：2026-06-01（2026-06-05 据原文校订）| Reading List Monitor
+> 论文来源：[arXiv:2605.24740](https://arxiv.org/abs/2605.24740) ｜ **ICML 2026**（含正文与附录）
+> 作者：Amogh Palasamudram, Jakub Svoboda, Suguman Bansal, Krishnendu Chatterjee
+> 主题分类：cs.LG（Machine Learning）, cs.GT（Computer Science and Game Theory）
+
+> **重要校订说明：** 本报告初版（2026-06-01）在未取得原文的情况下，依标题"reachability"误判为 **Hamilton-Jacobi reach-avoid / 连续控制**方向，整体技术定位错误。取得 arXiv:2605.24740 摘要后确认：本文是一篇**理论 RL** 论文，研究的是 **MDP 上 reachability specification 的 PAC 学习**，与 HJ reachability、safety filter、连续状态 reach-avoid 无关。以下为据摘要重写的版本；正文定理细节待通读 PDF 后再补。
 
 ## 1. 问题背景与研究动机
 
-reachability analysis 是 CPS 与安全控制的核心工具：给定一组目标集（target set）与障碍集（avoid set），reach-avoid 问题要刻画出 reach-avoid set——即存在控制策略，能在最坏扰动下安全抵达目标的初始状态集合。经典做法是求解 Hamilton-Jacobi (HJ) 偏微分方程 / 变分不等式（HJVI），其 value function 的零水平集恰好给出 reachable/reach-avoid set。HJ 方法理论上严格，但基于网格的求解器受 curse of dimensionality 限制，难以扩展到高维系统。
+本文研究的"reachability"是**序贯决策（sequential decision-making）意义下的 reachability specification**：在一个（通常未知的）Markov Decision Process 上，目标是最大化到达某目标状态集合的概率，即 reachability objective。这是 formal methods 与 RL 交叉处的基础问题——许多时序规范（safety、reachability、乃至 ω-regular 的片段）都可归约到 reachability。
 
-近年来 learning-based reachability 成为主流替代：用 RL / 神经网络逼近 reachability value function，从而处理高维、甚至 model-free 的场景（如 Fisac 等的 Safety Bellman Equation、Hsu 等的 reach-avoid Q-learning、Yu 等的 Reachability Constrained RL）。然而这类方法的一个长期痛点正是**理论保证的缺失**：RL 训练得到的 value function 是否真的收敛到真实的 reachability value？在什么意义下"最优"？很多工作只能给出局部最优（local optimum）或保守近似（conservative approximation），缺乏对**渐近最优性（asymptotic optimality）**的刻画。
+研究动机来自该问题"理论保证薄弱"的现状。摘要指出：尽管 reachability 的 RL 十分基础，其**理论保证仍较少被探讨**；近期已有工作能做到**渐近收敛到最优策略（asymptotic convergence to optimal policies）**，但这类结果对**收敛动力学（convergence dynamics）本身提供的洞察有限**——只知道"极限处最优"，却不清楚"如何、以何种结构逼近最优"。
 
-本文标题中的"Guaranteeing Asymptotic Optimality"正是切入这一缺口。其核心问题应是：**设计一个用于 reachability/reach-avoid 计算的 RL 算法，并从理论上证明其在适当极限下（典型如 discount factor γ→1、迭代次数→∞、或样本量→∞）收敛到真实的 reachability value function / reach-avoid set，即渐近最优。** 这弥补了"可扩展但无保证"与"有保证但不可扩展"之间的鸿沟。
-
-需要重点关注的难点在于：reach-avoid 问题的 Bellman backup 不是标准的 sum-of-rewards 形式，而是 min/max 嵌套（reach 取 max-over-time，avoid 取 min-over-time），其 time-discounted 版本的 contraction 性质与折扣因子和真实（undiscounted）reachability 之间存在 gap。把这个 gap 在 γ→1 时压到零，正是"asymptotic optimality"需要技术处理的核心。
+本文的核心诉求，是给出一个**对收敛过程有更深理论洞察**的替代方案：不满足于"极限最优"这一存在性结论，而是要刻画出逼近最优的机制，并据此重新证明"极限处可达到 exact optimality"。
 
 ## 2. 技术方法
 
-根据标题与该领域通行做法，本文方法论应包含以下要素（具体形式待原文核实）：
+据摘要，方法建立在 **PAC（Probably Approximately Correct）learning with assumptions** 之上，核心思路如下（定理细节待核实正文）：
 
-**(1) Discounted reach-avoid Bellman 算子。** 将 reach-avoid value function 写成带折扣的 Bellman 递推形式（time-discounted reach-avoid Bellman backup），借助折扣因子 γ 使算子成为 contraction mapping，从而保证 Q-learning 类迭代收敛到唯一不动点。这是 Fisac et al. (Safety Bellman Equation) 与 Hsu et al. 的标准技巧。
+**(1) 以 PAC learning 为骨架。** PAC learning 能在**有限时间**内、以**高置信度**给出**近最优（near-optimal）策略**。但经典 PAC 结果有一个前提：需要知道 MDP 的若干**内部参数**，典型如**最小转移概率（minimum transition probability）**等结构量。这在纯 RL（model-free / 未知模型）设定下通常是不可得的——这正是把 PAC 保证直接搬到 RL 的障碍。
 
-**(2) 渐近最优性证明。** 关键贡献应是证明：当 γ→1 时，折扣不动点收敛到真实（undiscounted）reach-avoid value function，其零水平集收敛到真实 reach-avoid set。可能用到的工具包括：算子的单调性与 contraction 常数随 γ 的标度关系、Blackwell optimality（策略对所有足够接近 1 的折扣因子均最优）、以及 multi-time-scale stochastic approximation（如 RCRL 所用）来处理 actor-critic 的耦合收敛。
+**(2) 参数的迭代精化（iterative refinement）。** 本文的关键论点是：这些未知的内部 MDP 参数虽然一开始不可知，却**可以被迭代地估计、并随交互不断提高精度**。也就是说，不把"已知参数"当作硬前提，而是把它替换为"逐步收敛到真值的估计序列"。
 
-**(3) 与函数逼近的结合。** 为支撑高维可扩展性，value function 通常用神经网络参数化。这里"asymptotic optimality"可能进一步扩展为：在 tabular / 精确表征下严格成立，在神经网络逼近下给出 conservative 近似或概率性保证（类似 Conservative Q-Learning 把 super-zero level set 作为 reach-avoid set 的保守内逼近）。
+**(3) 迭代满足 PAC 条件 ⇒ 极限处 exact optimality。** 通过**反复满足 PAC 条件**（每一轮用当前的参数估计触发一次 PAC 式的近最优保证，并随估计精度提高收紧近似），作者证明在极限处可达到**精确最优（exact optimality）**，而非仅近似最优。相比"直接给一个渐近收敛结论"，这条 PAC-迭代路线的好处是把"如何逼近"显式化，从而对 convergence dynamics 给出更细致的理论刻画。
 
-**(4) 算法形式。** 很可能是一个 model-free 的 actor-critic 或 value-iteration 变体，配合特定的目标/障碍奖励塑形（reward shaping），并在训练中退火 γ（γ-annealing）以逼近 undiscounted 极限——这是把"渐近"落地为可执行算法的常见手段。
+**(4) 实验验证。** 在标准 benchmark 上的实证评估验证了上述关于 convergence dynamics 的理论洞察（即不仅极限最优，逼近过程也符合理论预测）。
 
-理论保证的核心命题预期为：*在标准 MDP/游戏假设下，所提算法产生的 value 序列以概率 1 收敛到 discounted reach-avoid 不动点，且该不动点随 γ→1 收敛到真实 reach-avoid value*——即兼具算法层面（迭代收敛）与问题层面（折扣→无折扣）的双重渐近最优。
+简言之，本文不是提出新的连续控制可达性求解器，而是在**理论 RL** 层面，用"可迭代精化的 PAC 假设"替代"已知 MDP 参数"的不现实前提，从而把 PAC 的有限时间近最优保证升级为 RL 设定下的**渐近精确最优**保证，并对收敛过程给出更强的可解释性。
 
 ## 3. 研究前沿与意义
 
-HJ reachability × RL 是当前安全控制领域**极为活跃**的交叉方向，证据充分：
+reachability objective 的理论 RL（带形式化保证的收敛分析）是 formal methods × RL 的活跃前沿，常见于 CAV、TACAS、AAAI、IJCAI、NeurIPS、ICML 等。本文被 **ICML 2026** 接收，cs.LG/cs.GT 分类，作者团队（Krishnendu Chatterjee、Suguman Bansal 等）长期工作在 quantitative verification、ω-regular RL、博弈与概率系统验证方向，正是该交叉领域的代表性研究力量（Chatterjee 在 IST Austria，Bansal 在 Georgia Tech，均以 specification-guided / formal RL 著称）。
 
-- 2024 年出现了专门的综述《Hamilton-Jacobi Reachability in Reinforcement Learning: A Survey》(arXiv:2407.09645)，标志该方向已成体系。
-- 2026 年仍有持续产出，如《Formalizing the Relationship between Hamilton-Jacobi Reachability and Reinforcement Learning》(arXiv:2601.08050)、《Certifying Hamilton-Jacobi Reachability Learned via Reinforcement Learning》(arXiv:2602.16475)、以及面向应用的《Interacting safely with cyclists using HJ reachability and RL》(arXiv:2602.18097)。
-- 主要竞争/相关方法谱系：Fisac et al. 的 Safety Bellman Equation（time-discounted safety）、Hsu et al. 的 reach-avoid Q-learning（ICRA/RSS 系）、Yu et al. 的 Reachability Constrained RL (ICML 2022)、Ganai et al. 的 Iterative Reachability Estimation / RESPO (NeurIPS 2023)，以及 Lipschitz-continuous value function 的 certifiable reachability learning (arXiv:2408.07866)。
-- 活跃研究组：UC Berkeley（Claire Tomlin / Jaime Fisac 一系，现 Princeton）、Stanford、CMU 等在 HJ reachability 与 safe RL 上长期深耕。
+定位上，本文与"另一条同样宣称 asymptotic optimality 的近期工作"形成直接对话——摘要中"A recent work achieves asymptotic convergence to optimal policies"指的应是同期用别的技术（如 ω-regular reward / discounted 收敛）证明渐近最优的工作；本文的差异化卖点是**用 PAC + 参数迭代精化提供更深的 convergence-dynamics 洞察**。这把讨论从"能否渐近最优"推进到"以何种有限时间、高置信度的结构逼近最优"，对 sample complexity 与可信部署有实际意义。
 
-常见发表 venue：会议方面有 NeurIPS、ICML、ICLR、CoRL、RSS、ICRA、L4DC、CDC、HSCC；期刊方面有 T-RO、IEEE T-AC、Automatica。本文若理论保证扎实，定位上很契合 L4DC / CDC / NeurIPS 这类强调"learning + 理论保证"的场子。
-
-本文的意义在于：把 learning-based reachability 从"经验上 work、缺乏保证"推进到"有渐近最优性证明"，这对安全攸关（safety-critical）系统的可信部署是实质性的——只有当学到的 value function 能被证明逼近真实 reach-avoid set，才能放心地把它用作 safety filter 或 verification 工具。
+需要强调（纠正初版误判）：本文属于**tabular / 理论 MDP** 谱系，而非 Hamilton-Jacobi reachability、neural reach-avoid value function 那一支连续控制工作。两者同用"reachability"一词，但问题设定（离散 MDP 到达概率 vs. 连续动力学最坏扰动 reach-avoid set）与方法工具（PAC/sample complexity vs. HJ PDE/Bellman contraction）截然不同。
 
 ## 4. 相关工作
 
-1. **Bridging Hamilton-Jacobi Safety Analysis and Reinforcement Learning（Safety Bellman Equation）— Fisac, Lugovoy, Rubies-Royo, Ghosh, Tomlin (ICRA 2019)。** 提出 time-discounted safety Bellman backup，使 HJ safety value 可由收敛的 Q-learning 求得。本文很可能直接继承其 discounted-contraction 框架，并将"safety/reach-avoid"与"γ→1 的渐近最优性"做更彻底的理论刻画——关联紧密，区别在于本文强调 asymptotic optimality 的显式保证而非仅收敛到 discounted 不动点。
+> 注：以下为基于摘要与作者群已知研究脉络的推断性定位；精确引用与对比待正文确认。
 
-2. **Safety and Liveness Guarantees through Reach-Avoid Reinforcement Learning — Hsu, Rubies-Royo, Tomlin, Fisac (RSS 2021, arXiv:2112.12288)。** 推导 reach-avoid Bellman backup 并证明 reach-avoid Q-learning 收敛，给出 reach-avoid set 的保守近似。与本文解决同类问题，区别可能在于本文进一步把"保守近似"收紧为"渐近精确"，或对函数逼近下的最优性 gap 给出定量界。
+1. **"A recent work achieving asymptotic convergence to optimal policies"（摘要点名的对照工作）：** 本文的直接比较对象，同样证明 reachability RL 的渐近最优，但据摘要其对 convergence dynamics 洞察有限。本文以 PAC 路线提供更细的逼近刻画作为区别。建议在正文 Related Work 中定位该文确切出处。
 
-3. **Reachability Constrained Reinforcement Learning — Yu, Ma, et al. (ICML 2022, arXiv:2205.07536)。** 用 multi-time-scale stochastic approximation 证明算法收敛到 local optimum 且能保证最大可行集。与本文互补：RCRL 关注"约束满足下的奖励最优"，本文关注"reachability value 本身的渐近最优"；二者可能共享 stochastic approximation 的收敛分析工具。
+2. **PAC RL / sample-complexity 理论（如 PAC-MDP、E³、R-MAX 谱系）：** 提供"有限时间、高置信度近最优"的经典框架，但通常需要已知或可探索得到的 MDP 结构量。本文的贡献正是放松"已知 minimum transition probability"等前提，改为迭代估计。
 
-4. **Iterative Reachability Estimation for Safe RL (RESPO) — Ganai et al. (NeurIPS 2023, arXiv:2309.13528)。** 通过 reachability estimation function 在随机环境中维持可行集内的持久安全，理论上收敛到局部最优。与本文同属"reachability + 收敛保证"，区别在于 RESPO 偏 constrained-RL 框架与最小累计违规，本文更偏纯 reach-avoid value 的精确逼近。
+3. **ω-regular / LTL objectives 的 RL 与收敛保证（Chatterjee、Bansal 等团队的系列工作）：** reachability 是 ω-regular 规范的基础片段。本文可视为该研究线在"reachability + 收敛动力学"上的精细化。
 
-5. **Certifiable Reachability Learning Using a New Lipschitz Continuous Value Function（arXiv:2408.07866）。** 通过 Lipschitz 连续 value function 为学到的 reachability 提供确定性安全证书。与本文目标一致（给 learning-based reachability 加保证），路线不同：该工作用 Lipschitz 正则 + 后验 certification，本文（据标题）走渐近最优性的收敛分析路线，二者可视为"certification"与"asymptotic exactness"两种互补的保证范式。
+4. **Quantitative verification of MDPs（probabilistic model checking, 如 PRISM/Storm 求解 reachability probability）：** 已知模型时的精确解参照系；本文处理的是模型未知、需在 RL 中边学边保证的情形。
+
+5. **（与初版误列工作的关系）：** Fisac 等 Safety Bellman Equation、Hsu 等 reach-avoid Q-learning、Yu 等 RCRL 等属于 **HJ/连续 reach-avoid** 谱系，与本文**并非同一问题**，初版将它们列为近邻是误判，特此更正——它们至多在"reachability 一词"上同名。
 
 ## 5. 组会讨论要点
 
-1. **折扣 gap 与 γ-annealing 的实际代价。** 渐近最优性通常依赖 γ→1，但 γ 越接近 1，contraction 越弱、训练越不稳定、样本复杂度越高。值得讨论：本文是否给出收敛速率（rate）而不仅是渐近结论？γ→1 与神经网络逼近误差之间是否存在权衡？这直接关系到方法在我们关心的高维 CPS 上是否真正可用。
+- **PAC 参数迭代精化的代价与速率。** 本文用"迭代估计 minimum transition probability 等内部参数"替代已知前提。值得讨论：估计这些结构量（尤其 minimum transition probability，往往是 sample complexity 的瓶颈量）本身的样本代价有多大？论文是否给出收敛**速率**而不仅是极限结论？这决定了该理论洞察能否转化为实际样本效率优势。
 
-2. **与函数逼近下"保证退化"的关系。** 严格的渐近最优性多在 tabular 设定下成立，一旦引入神经网络，是变成概率性保证、保守内逼近，还是完全失去保证？这与我们组在 conformal / certificate 方向的工作（如把学到的 value 当作 barrier/safety filter）能否衔接——能否用本文的渐近最优 value 作为 conformal calibration 的基准量？
+- **与组内 specification-guided RL 的衔接。** 我们组关注 LTL/automata、安全 RL。reachability 是这些规范的基础构件，本文"迭代满足 PAC 条件 ⇒ 极限精确最优"的论证范式，或可推广到更一般的 ω-regular reward（与本期另一篇 supermartingale 证书工作、以及 RAD Embeddings 工作恰可对照：一个谈证书、一个谈表征、本文谈收敛保证）。
 
-3. **可作为 safety filter 的可信度。** 如果 value function 只在渐近意义下最优，在有限训练预算下其零水平集会偏保守还是偏激进（safety-critical 场景下激进=危险）？建议跟进的实验：在已知解析 reach-avoid set 的低维 benchmark（如 double integrator、Dubins car）上量化收敛误差，再外推到高维，评估其作为 runtime safety filter 的可靠性。
+- **理论假设的现实性。** PAC-with-assumptions 仍依赖一些结构性假设。组会可讨论：这些假设在我们实际关心的环境（大状态空间、稀疏奖励、近确定性转移）中是否成立或可估计？exact optimality 的"极限"结论对有限预算的工程部署意味着什么？
 
 ## 参考文献
 
-- [Reachability Constrained Reinforcement Learning (Yu et al., ICML 2022)](https://arxiv.org/abs/2205.07536)
-- [Safety and Liveness Guarantees through Reach-Avoid Reinforcement Learning (Hsu et al., RSS 2021)](https://arxiv.org/pdf/2112.12288)
-- [Iterative Reachability Estimation for Safe Reinforcement Learning / RESPO (Ganai et al., NeurIPS 2023)](https://arxiv.org/pdf/2309.13528)
-- [Certifiable Reachability Learning Using a New Lipschitz Continuous Value Function](https://arxiv.org/pdf/2408.07866)
-- [Hamilton-Jacobi Reachability in Reinforcement Learning: A Survey (2024)](https://arxiv.org/html/2407.09645v1)
-- [Formalizing the Relationship between Hamilton-Jacobi Reachability and Reinforcement Learning (2026)](https://arxiv.org/html/2601.08050v1)
-- [Certifying Hamilton-Jacobi Reachability Learned via Reinforcement Learning (2026)](https://arxiv.org/html/2602.16475v1)
-- [Infinite-Horizon Reach-Avoid Zero-Sum Games via Deep Reinforcement Learning](https://arxiv.org/pdf/2203.10142)
+- Palasamudram, Svoboda, Bansal, Chatterjee. *Reinforcement Learning for Reachability: Guaranteeing Asymptotic Optimality.* ICML 2026. arXiv:2605.24740. https://arxiv.org/abs/2605.24740
+- （对照工作、PAC-MDP 谱系、ω-regular RL 等精确引用待正文 Related Work 确认后补全）
 
-*备注：本报告所列方法定位基于标题语义与近邻文献推断。该确切标题未在公开渠道检索到，建议在拿到原文（arXiv 或会议版）后核对其 Bellman 算子形式、渐近最优性定理的精确陈述与假设条件，再据此更新第 2、5 节。*
+*备注：本报告已于 2026-06-05 据 arXiv:2605.24740 官方摘要整体重写，纠正了初版将本文误判为 HJ reachability/连续控制方向的错误。第 2、4 节的定理与引用细节仍待通读 PDF 正文后核校。*

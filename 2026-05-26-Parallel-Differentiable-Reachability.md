@@ -1,29 +1,30 @@
 # Parallel Differentiable Reachability for Learning and Planning with Certified Neural Dynamics and Controllers — 调研报告
 
-> 生成日期：2026-05-26 | Reading List Monitor
-> 论文来源：未在公开 arXiv 索引中检索到完全同名条目（截至本报告生成时刻），疑似最新预印本或匿名 review 阶段稿件。下文调研基于标题语义与领域近邻工作进行重建。
+> 生成日期：2026-05-26（2026-06-05 据原文校订）| Reading List Monitor
+> 论文来源：[arXiv:2605.25346](https://arxiv.org/abs/2605.25346) ｜ Robotics: Science and Systems XXII (RSS 2026)
+> 作者：Keyi Shen, Glen Chou（Georgia Tech）
+
+> **校订说明：** 本报告初版于 2026-05-26 未检索到原文、基于标题重建；现已据 arXiv:2605.25346 摘要校订关键事实（框架名 DiffReach-Robotics、JAX 实现、Taylor-model + CROWN 统一表示、最高 72D、含硬件实验等）。第 2 节方法描述以摘要为准，正文细节待通读 PDF 后再补。
 
 ## 1. 问题背景与研究动机
 
-可达性分析（reachability analysis）是 learning-enabled 控制系统形式化验证的核心工具：给定不确定输入与初始集，估计闭环系统在有限或无限时域内可能进入的状态集合，并据此验证 safety/reach-avoid 属性。当 dynamics 与 controller 同时由神经网络表示时，这一计算面临三重困难：(i) 网络非线性导致解析可达集难以闭式表达；(ii) 现有工具（如 ReachNN、POLAR-Express、CROWN/α-β-CROWN）多基于 interval bound propagation 或 Taylor model，单次计算成本高，且通常不可微，无法嵌入到 learning 与 planning 的优化回路中；(iii) 严格的 formal certificate 与可微的、GPU 友好的实现往往是相互冲突的工程目标。
+可达性分析（reachability analysis）是 learning-enabled 控制系统形式化验证的核心工具：给定不确定输入与初始集，估计闭环系统在有限或无限时域内可能进入的状态集合，并据此验证 safety/reach-avoid 属性。当 dynamics 与 controller 同时由神经网络表示时（closed-loop NN system），这一计算面临三重困难：(i) 网络非线性导致解析可达集难以闭式表达；(ii) 现有工具（如 ReachNN、POLAR-Express、CROWN/α-β-CROWN）多基于 interval bound propagation 或 Taylor model，单次计算成本高，且通常**不可微**、**过保守**或**过慢**，无法嵌入到现代 learning 与 online planning 的优化回路中；(iii) 严格的 formal certificate 与可微的、GPU 友好的实现往往是相互冲突的工程目标。
 
-本论文标题中 "Parallel"、"Differentiable" 与 "Certified" 三个修饰词的并置，意味着作者试图同时实现：批量化的并行可达性计算（利用 GPU 加速）、对参数/初始条件可求梯度（用于 learning 与 trajectory optimization）、以及对所得 over-approximation 给出可证明的 soundness。这是近年 neural verification 社区从 "verify after training" 走向 "verify during training / verify during planning" 的标志性方向（参考 Verified Safe RL [1]、cuTAMP [2]、immrax [3]），但要在 dynamics 与 controller 两侧都是神经网络的全 learning-enabled 设定下做到 certified 还较为少见。
-
-核心动机可以总结为：让可达性集合本身成为一个**可微的张量算子**，使得 safety constraint 能像 reward 一样反向传播回 policy / dynamics 网络的参数，从而支持 safety-aware policy gradient、reachability-guided MPC、以及 verification-in-the-loop 训练。
+本文（摘要明确）的目标正是同时实现：可并行（GPU-batched）、可微（autograd）、且对 over-approximation 给出 sound 保证的可达性计算原语，并把它落地为 learning 与 planning 的闭环工具。这是近年 neural verification 社区从 "verify after training" 走向 "verify during training / verify during planning" 的标志性方向。核心动机可总结为：让可达集本身成为一个**可微的张量算子**，使 safety constraint 能像 reward 一样反传回 policy / dynamics 网络参数，从而支持 certified training、reachability-aware MPC、以及 verification-in-the-loop 的学习。
 
 ## 2. 技术方法
 
-虽未取得正文，从题目可推断方法大概率沿用如下技术栈：
+据摘要，方法的技术栈如下（正文细节待核实）：
 
-(1) **区间/混合单调可达性的 JAX/PyTorch 实现**：以 mixed monotone reachability 或 zonotope/CROWN-style linear bound propagation 作为底层抽象，将每一时步的前向可达更新写成可微的张量运算，自然继承 autograd。这与 immrax [3] 思路一致，但本文应进一步针对 closed-loop 情形（dynamics 与 controller 复合）进行 fusion，减少中间过近似。
+(1) **统一表示：Taylor-model flowpipe + CROWN-style 线性边界传播。** 框架在 JAX 中实现，面向连续时间与离散时间系统，且 dynamics 与 controller 既可以是解析形式也可以是神经网络。其核心创新是用一个**统一表示**同时承载 Taylor-model flowpipe 构造与 CROWN 风格的 linear bound propagation，在传播过程中**保持 affine dependency**（从而抑制 wrapping effect），同时支持 GPU-batched 计算与 automatic differentiation。
 
-(2) **并行采样 + 分块过近似**：将初始集划分为若干 hyperrectangle / zonotope 子块，每个子块独立计算其前向可达集，所有子块的并集即为最终 over-approximation。子块间无依赖、天然适合 GPU 上的 batch 计算（这一思路在 Certified Neural Approximations of Nonlinear Dynamics [4] 中也出现，并被证明可显著降低 wrapping effect）。
+(2) **certified 保证的来源。** 依赖 sound 的 Taylor model（带严格余项）与 CROWN 线性边界，保证输出为真实可达集的 over-approximation；affine 依赖的保持是控制保守性的关键工程手段。
 
-(3) **certified 保证的来源**：通常依赖 sound bound propagation（如 IBP、CROWN、Taylor models with rigorous remainder）以保证 over-approximation。论文很可能给出一个定理证明：对任意输入区间 $X_0$ 与时域 $T$，输出可达集的 over-approximation $\hat{R}_T(X_0) \supseteq R_T(X_0)$，且 wrapping error 随 partition 粒度可调。
+(3) **下游集成（基于该可达原语构建）：**
+- **certified training**：一种鼓励 "reachability-friendly" dynamics model 与 controller 的训练方法——把可达性纳入训练目标，使学到的模型/控制器更易获得紧致且 sound 的可达集；
+- **reachability-aware sampling-based MPC + 梯度精化**：在采样式 MPC 中以可达集为约束，并用 gradient-based refinement 改进候选轨迹，实现保持 certified over-approximation 的 online planning。
 
-(4) **下游集成**：可微可达集通常通过两种方式进入 learning/planning：
-- 在 policy training 时，用 reachable set 与 unsafe set 的距离（或 signed distance）作为 safety loss，与 task reward 联合优化；
-- 在 planning 时，将 reachable tube 作为 trajectory optimization 的硬/软约束，在 MPC 滚动窗口内求解 reach-avoid 问题。
+(4) **实验范围。** 在 non-prehensile manipulation 与 quadrotor 任务上验证，含**硬件实验**与**最高 72 维**的高维评测，证明在 bounded uncertainty 下既能实用化 online planning，又维持 certified reachable-set over-approximation。整体框架命名为 **DiffReach-Robotics**。
 
 这种 "certified + differentiable + parallel" 三要素的统一，是当前 safe learning 的中心方法论之一。
 
@@ -78,4 +79,6 @@
 
 [8] Provable Bounds on the Hessian of Neural Networks: Derivative-Preserving Reachability Analysis. (2024). arXiv:2406.04476. https://arxiv.org/abs/2406.04476
 
-> 注：本论文在 2026-05-26 检索时未在 arXiv 上以完整标题命中。若后续追踪到正式发布版本，请回填 DOI 与 arXiv ID。
+[9] Shen, K., & Chou, G. (2026). Parallel Differentiable Reachability for Learning and Planning with Certified Neural Dynamics and Controllers. RSS 2026. arXiv:2605.25346. https://arxiv.org/abs/2605.25346
+
+> 注：本论文已于 2026-06-05 据 arXiv:2605.25346（RSS 2026，Keyi Shen & Glen Chou, Georgia Tech）校订。第 2 节方法描述以官方摘要为准；完整的传播紧度、复杂度与实验对比待通读 PDF 后补全。
